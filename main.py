@@ -10,6 +10,7 @@ from nhacungcap import NhaCungCap
 from nhanvien import NhanVien
 from mathang import MatHang
 from dondathang import DonDatHang
+from chitietdondathang import ChiTietDonDatHang
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -70,8 +71,10 @@ class MainWindow(QtWidgets.QMainWindow):
         quanly_menu.addAction(dondathang_action)
 
 
+
         self.setCentralWidget(self.layout)
-        self.show()
+
+
 
 
 
@@ -79,4 +82,6 @@ class MainWindow(QtWidgets.QMainWindow):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     myapp = MainWindow()
-    sys.exit(app.exec())
+    myapp.show()
+    #sys.exit(app.exec())
+    app.exec()

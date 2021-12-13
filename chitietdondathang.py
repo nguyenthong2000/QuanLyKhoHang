@@ -1,25 +1,31 @@
-import win32com.client
 from PySide6 import QtGui,QtCore,QtWidgets
 import sys
 from bson.objectid import ObjectId
-from win32com import client
+from random import randint
+import datetime
+
 
 import pymongo
 from pymongo import MongoClient
 
 client = pymongo.MongoClient("mongodb+srv://hoangthong:hoangthong16@onmyojibot.fgbvh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 db = client["QuanLyKhoHang"]
-collection= db["LoaiHang"]
+collection= db["ChiTietDonDatHang"]
 
-
-class LoaiHang(QtWidgets.QWidget):
-    def __init__(self):
+class ChiTietDonDatHang(QtWidgets.QDialog):
+    def __init__(self, madondathang):
         super().__init__()
         self.w = 1500
         self.h = 600
         self.setMinimumSize(self.w, self.h)
         self.r = 0
-        self.label_title = ["Mã Loại Hàng", "Tên Loại Hàng"]
+        self.label_title = ["Mã mặt hàng", "Số lượng","Đơn Giá"]
+        self.madondathang = madondathang
+        self.listid =[]
+
+        self.setWindowTitle("Quản Lý Kho Hàng")
+
+
         self.setContentsMargins(10, 0, 10, 10)
 
         # layout chính
@@ -27,9 +33,10 @@ class LoaiHang(QtWidgets.QWidget):
         self.setLayout(layout)
 
         # Bảng dữ liệu
-        self.tableWidget = QtWidgets.QTableWidget(50, 2)
-        self.tableWidget.setMinimumSize(600,300)
-        self.tableWidget.setStyleSheet("font-size: 14px")
+        self.tableWidget = QtWidgets.QTableWidget(50, 3)
+        self.tableWidget.setMinimumSize(600,280)
+        self.tableWidget.setStyleSheet("font-size: 14px"
+                                       "margin-bottom: 10px")
         #self.tableWidget.setSortingEnabled(True)
         # set tiêu đề cột
         self.tableWidget.setHorizontalHeaderLabels(self.label_title)
@@ -39,11 +46,17 @@ class LoaiHang(QtWidgets.QWidget):
         self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
         # Tiêu đề bảng
-        self.lb_title = QtWidgets.QLabel("Loại Hàng")
+        self.lb_title = QtWidgets.QLabel("Chi Tiết Đơn Đặt Hàng")
         self.lb_title.setStyleSheet("color: blue;"
                                   "font: bold 24px;"
-                                  "margin-bottom: 30px")
+                                  "margin-bottom: 10px")
         self.lb_title.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.lb_title2 = QtWidgets.QLabel("Mã Đơn Hàng: {}".format(self.madondathang))
+        self.lb_title2.setStyleSheet(
+                                    "font: bold 20px;"
+                                    "margin-bottom: 20px")
+        self.lb_title2.setAlignment(QtCore.Qt.AlignCenter)
 
         # Layout tìm kiếm
         self.layout_timkiem = QtWidgets.QGridLayout()
@@ -79,30 +92,39 @@ class LoaiHang(QtWidgets.QWidget):
         self.layout_timkiem.addWidget(self.btn_timkiem, 0, 2)
         self.layout_timkiem.addWidget(self.btn_refresh,0,3)
 
-
-
         self.layout_thaotac = QtWidgets.QGridLayout()
 
-        # Label Mã loại hàng
-        self.lb_ma = QtWidgets.QLabel("Mã loại hàng")
+        # Label Mã Mặt hàng
+        self.lb_ma = QtWidgets.QLabel("Mã Mặt hàng")
         self.lb_ma.setStyleSheet("font-size: 14px")
 
-        # Label Tên loại hàng
-        self.lb_ten = QtWidgets.QLabel("Tên loại hàng")
-        self.lb_ten.setStyleSheet("font-size: 14px")
+        # Label Sô lượng
+        self.lb_soluong = QtWidgets.QLabel("Số lượng")
+        self.lb_soluong.setStyleSheet("font-size: 14px")
 
-        # LineEdit Mã loại hàng
+        # Label Đơn giá
+        self.lb_dongia = QtWidgets.QLabel("Đơn Giá")
+        self.lb_dongia.setStyleSheet("font-size: 14px")
+
+
+        # LineEdit Mã mặt hàng
         self.le_ma = QtWidgets.QLineEdit()
-        self.le_ma.setEnabled(False)
         self.le_ma.setStyleSheet("width: 100px;"
                                  "height: 25px;"
                                  "font-size: 14px")
 
-        # LineEdit Tên loại hàng
-        self.le_ten = QtWidgets.QLineEdit()
-        self.le_ten.setStyleSheet("width: 100px;"
-                               "height: 25px;"
-                                  "font-size: 14px")
+
+        # LineEdit số lượng
+        self.le_soluong = QtWidgets.QSpinBox()
+        self.le_soluong.setStyleSheet("width: 100px;"
+                                     "height: 25px;"
+                                     "font-size: 14px")
+
+        # LineEdit Đơn giá
+        self.le_dongia = QtWidgets.QLineEdit()
+        self.le_dongia.setStyleSheet("width: 100px;"
+                                                "height: 25px;"
+                                                "font-size: 14px")
 
         # button Thêm
         self.btn_them = QtWidgets.QPushButton("Thêm")
@@ -131,10 +153,15 @@ class LoaiHang(QtWidgets.QWidget):
 
         # chèn Label vào layout_thaotac
         self.layout_thaotac.addWidget(self.lb_ma, 0, 0)
-        self.layout_thaotac.addWidget(self.lb_ten, 1, 0)
+        self.layout_thaotac.addWidget(self.lb_soluong, 1, 0)
+        self.layout_thaotac.addWidget(self.lb_dongia, 2, 0)
+
+
         # chèn LineEdit vào layout_thaotac
         self.layout_thaotac.addWidget(self.le_ma, 0, 1)
-        self.layout_thaotac.addWidget(self.le_ten, 1, 1)
+        self.layout_thaotac.addWidget(self.le_soluong, 1, 1)
+        self.layout_thaotac.addWidget(self.le_dongia, 2, 1)
+
         # chèn Button vào layout_thaotac
         self.layout_thaotac.addWidget(self.btn_them, 0, 2)
         self.layout_thaotac.addWidget(self.btn_sua,1,2)
@@ -142,10 +169,10 @@ class LoaiHang(QtWidgets.QWidget):
 
         # Chèn các layout vào layout chính
         layout.addWidget(self.lb_title)
+        layout.addWidget(self.lb_title2)
         layout.addLayout(self.layout_timkiem)
         layout.addWidget(self.tableWidget)
         layout.addLayout(self.layout_thaotac)
-
 
         # Hiện thị dữ liệu
         self.HienThi()
@@ -162,51 +189,72 @@ class LoaiHang(QtWidgets.QWidget):
         """Hiện thị dữ liệu"""
         self.tableWidget.clear()
         self.tableWidget.setHorizontalHeaderLabels(self.label_title)
-        loaddata = collection.find()
+        loaddata = collection.find({"id_madondathang": self.madondathang})
         item_count = loaddata.count()
-        if item_count > 50:
+        if item_count >50:
             self.tableWidget.setRowCount(item_count)
         i = 0
+        self.listid.clear()
         for data in loaddata:
-            self.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(str(data["_id"])))
-            self.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(data["tenloaihang"]))
+
+            self.listid.append(data["_id"])
+            self.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(str(data["id_mathang"])))
+            self.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(str(data["soluong"])))
+            self.tableWidget.setItem(i, 2, QtWidgets.QTableWidgetItem(str(data["dongia"])))
             i = i + 1
 
 
     def Them(self):
         """Thêm dữ liệu"""
-        '''
-        if self.le_ma.text() == "":
-            data = {"tenloaihang": self.le_ten.text()}
-        else:
-            data = {"_id": self.le_ma.text(),"tenloaihang": self.le_ten.text()}
-        '''
-        data = {"tenloaihang": self.le_ten.text()}
-        collection.insert_one(data)
-        self.HienThi()
+        print("a")
+        try:
+            dongia = float(self.le_dongia.text())
+            data = {"id_madondathang":ObjectId(self.madondathang),
+                "id_mathang":ObjectId(self.le_ma.text()),
+                    "soluong": self.le_soluong.value(),
+                    "dongia": dongia}
+            collection.insert_one(data)
+            self.HienThi()
+        except Exception:
+            QtWidgets.QMessageBox.about(self,"error","Đơn giá không được nhập chữ")
 
     def Sua(self):
         """Sửa dữ liệu"""
+
         if self.le_ma.text():
-            collection.update_one({"_id": ObjectId(self.le_ma.text())},{"$set":{"tenloaihang":self.le_ten.text()}})
+            dongia = float(self.le_dongia.text())
+            collection.update_one({"_id": self.listid[self.r]},
+                                  {"$set": {"id_mathang":ObjectId(self.le_ma.text()),
+                    "soluong": self.le_soluong.value(),
+                    "dongia": dongia}})
+
             self.HienThi()
         else:
-            QtWidgets.QMessageBox.critical(self,"Thông báo","Không thể sửa khi thiếu mã")
+            QtWidgets.QMessageBox.critical(self,"Thông báo","Không thể sửa")
+
 
     def Xoa(self):
         """Xoá dữ liệu"""
-        collection.delete_one({"_id":ObjectId(self.le_ma.text())})
-        self.HienThi()
+        try:
+            collection.delete_one({"_id":ObjectId(self.listid[self.r])})
+            self.HienThi()
+        except Exception:
+            QtWidgets.QMessageBox.critical(self, "Thông báo", "Không thể xoá")
 
     def SelectedItem(self, event):
         """Hiện thị dữ liệu ở ô đang chọn trong LineEdit"""
         self.r = event.row()
         try:
             self.le_ma.setText(self.tableWidget.item(self.r, 0).text())
-            self.le_ten.setText(self.tableWidget.item(self.r, 1).text())
-        except:
+            self.le_soluong.setValue(int(self.tableWidget.item(self.r, 1).text()))
+            self.le_dongia.setText(self.tableWidget.item(self.r,2).text())
+
+        except Exception as e:
+            print(e)
             self.le_ma.setText("")
-            self.le_ten.setText("")
+            self.le_soluong.setValue(0)
+            self.le_dongia.setText("")
+
 
     def TimKiem(self):
         """Tìm kiếm dữ liệu"""
@@ -214,14 +262,17 @@ class LoaiHang(QtWidgets.QWidget):
         self.tableWidget.setHorizontalHeaderLabels(self.label_title)
 
         if self.cbb_timkiemtheo.currentIndex() == 0:
-            loaddata = collection.find({"_id":ObjectId(self.le_thanhtimkiem.text())})
-        else:
-            loaddata = collection.find({"tenloaihang": self.le_thanhtimkiem.text()})
+            loaddata = collection.find({"id_mathang":ObjectId(self.le_thanhtimkiem.text())})
+        elif self.cbb_timkiemtheo.currentIndex() == 1:
+            loaddata = collection.find({"soluong": int(self.le_thanhtimkiem.text())})
+        elif self.cbb_timkiemtheo.currentIndex() == 2:
+            loaddata = collection.find({"dongia": float(self.le_dongia.text())})
 
         i = 0
         for data in loaddata:
-            self.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(str(data["_id"])))
-            self.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(data["tenloaihang"]))
+            self.tableWidget.setItem(i, 0, QtWidgets.QTableWidgetItem(str(data["id_mathang"])))
+            self.tableWidget.setItem(i, 1, QtWidgets.QTableWidgetItem(str(data["soluong"])))
+            self.tableWidget.setItem(i, 2, QtWidgets.QTableWidgetItem(str(data["dongia"])))
             i = i + 1
 
 

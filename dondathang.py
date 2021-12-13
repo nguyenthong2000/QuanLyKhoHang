@@ -4,6 +4,8 @@ from bson.objectid import ObjectId
 from random import randint
 import datetime
 
+from chitietdondathang import ChiTietDonDatHang
+
 
 import pymongo
 from pymongo import MongoClient
@@ -61,7 +63,7 @@ class DonDatHang(QtWidgets.QWidget):
         self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
         # Tiêu đề bảng
-        self.lb_title = QtWidgets.QLabel("Mặt Hàng")
+        self.lb_title = QtWidgets.QLabel("Đơn Đặt Hàng")
         self.lb_title.setStyleSheet("color: blue;"
                                   "font: bold 24px;"
                                   "margin-bottom: 30px")
@@ -208,6 +210,14 @@ class DonDatHang(QtWidgets.QWidget):
                                    "font-size: 14px"
                                    )
 
+        # button Chi tiet
+        self.btn_chitiet = QtWidgets.QPushButton("Chi Tiết")
+        self.btn_chitiet.setStyleSheet("width: 150px;"
+                                   "height: 30px;"
+                                   "margin-left: 100px;"
+                                   "font-size: 14px"
+                                   )
+
         # chèn Label vào layout_thaotac
         self.layout_thaotac.addWidget(self.lb_ma, 0, 0)
         self.layout_thaotac.addWidget(self.lb_ncc, 1, 0)
@@ -230,6 +240,7 @@ class DonDatHang(QtWidgets.QWidget):
         self.layout_thaotac.addWidget(self.btn_them, 0, 4)
         self.layout_thaotac.addWidget(self.btn_sua,1,4)
         self.layout_thaotac.addWidget(self.btn_xoa, 2, 4)
+        self.layout_thaotac.addWidget(self.btn_chitiet,3,4)
 
         # Chèn các layout vào layout chính
         layout.addWidget(self.lb_title)
@@ -247,6 +258,7 @@ class DonDatHang(QtWidgets.QWidget):
         self.tableWidget.clicked.connect(self.SelectedItem)
         self.btn_timkiem.clicked.connect(self.TimKiem)
         self.btn_refresh.clicked.connect(self.HienThi)
+        self.btn_chitiet.clicked.connect(self.ChiTiet)
 
     def HienThi(self):
         """Hiện thị dữ liệu"""
@@ -353,6 +365,9 @@ class DonDatHang(QtWidgets.QWidget):
             self.tableWidget.setItem(i, 6, QtWidgets.QTableWidgetItem(self.nhanvien.get(data["id_nhanvien"])))
             i = i + 1
 
+    def ChiTiet(self):
+        chitiet = ChiTietDonDatHang(ObjectId(self.le_ma.text()))
+        chitiet.exec()
 
 
 
